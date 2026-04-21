@@ -1,0 +1,98 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default Deny: The Master Gate
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Global Helpers ---
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+       return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // --- Validation Blueprints ---
+    function isValidUser(data) {
+      return data.email is string && 
+             data.email.size() <= 100 &&
+             data.role is string && 
+             data.role in ['Admin', 'User'] &&
+             data.createdAt is timestamp;
+    }
+
+    function isValidTask(data) {
+      return data.title is string && 
+             data.title.size() >= 3 && 
+             data.title.size() <= 100 &&
+             data.energy is string && 
+             data.energy in ['low', 'med', 'high'] &&
+             data.status is string && 
+             data.status in ['pending', 'completed', 'archived'] &&
+             data.ownerId == request.auth.uid &&
+             data.createdAt is timestamp;
+    }
+
+    function isValidLog(data) {
+      return data.energy is number && 
+             data.energy >= 0 && 
+             data.energy <= 100 &&
+             data.focus is number && 
+             data.focus >= 0 && 
+             data.focus <= 100 &&
+             data.timestamp is timestamp &&
+             data.ownerId == request.auth.uid;
+    }
+
+    // --- Collection Matches ---
+
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidUser(incoming()) && incoming().createdAt == request.time;
+      allow update: if isOwner(userId) && isValidUser(incoming()) && 
+                    incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'photoURL', 'updatedAt']) &&
+                    incoming().updatedAt == request.time;
+
+      // Tasks Subcollection
+      match /tasks/{taskId} {
+        allow list: if isOwner(userId);
+        allow get: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidTask(incoming()) && incoming().createdAt == request.time;
+        allow update: if isOwner(userId) && isValidTask(incoming()) && (
+          // Action: Complete Task
+          (incoming().diff(existing()).affectedKeys().hasOnly(['status', 'updatedAt']) && 
+           incoming().updatedAt == request.time) ||
+          // Action: Edit Title/Energy
+          (incoming().diff(existing()).affectedKeys().hasOnly(['title', 'energy', 'updatedAt']) && 
+           incoming().updatedAt == request.time)
+        );
+        allow delete: if isOwner(userId);
+      }
+
+      // Activity Logs Subcollection
+      match /activityLogs/{logId} {
+        allow list: if isOwner(userId);
+        allow get: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidLog(incoming()) && incoming().timestamp == request.time;
+        // Logs are generally immutable in ECHO for audit integrity
+        allow delete: if isOwner(userId);
+      }
+    }
+  }
+}

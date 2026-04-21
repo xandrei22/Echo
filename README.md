@@ -1,10 +1,10 @@
-# ECHO: Life Orchestrator 🧠⚡️
+# ECHO: Life Orchestrator
 
 **ECHO** is a high-performance personal operating system designed to align your daily tasks with your cognitive energy levels. Unlike static task managers, ECHO uses predictive logic and AI-driven behavioral insights to optimize your focus windows and drive meaningful momentum.
 
 ---
 
-## 🚀 Key Features
+## Key Features
 
 ### 1. **Predictive Energy Matching**
 Every task you create is tagged with an energy intensity (Low, Medium, High). ECHO's AI engine analyzes your behavioral history to predict your peak performance windows and suggests the right task at the right time.
@@ -28,7 +28,7 @@ Visualizes your observed cognitive curve based on task completion patterns and e
 
 ---
 
-## 🛠 Tech Stack
+## Tech Stack
 
 - **Frontend**: React 18+, Vite, Tailwind CSS
 - **Animations**: Framer Motion
@@ -39,7 +39,7 @@ Visualizes your observed cognitive curve based on task completion patterns and e
 
 ---
 
-## ⚙️ Setup & Configuration
+## Setup & Configuration
 
 ### Environment Variables
 Configure the following variables in your local `.env` file (see `.env.example` for templates):
@@ -54,7 +54,7 @@ ECHO requires a Firebase project for data synchronization. The application looks
 
 ---
 
-## 📖 User Manual
+## User Manual
 
 1. **Synchronize Identity**: Log in via Google to create your secure cloud vault.
 2. **Commit Intents**: Use the Task Hub to define tasks, assigning them an **Energy** level and **Priority**.
